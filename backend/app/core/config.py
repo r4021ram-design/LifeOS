@@ -13,7 +13,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "https://app.lifeos-ai.com",
         "https://lifeos-ai.com",
-        "https://life-os-kohl-ten.vercel.app"
+        "https://life-os-kohl-ten.vercel.app",
+        "https://life-as-kohl-ten.vercel.app"
     ]
     
     # AI Credentials
