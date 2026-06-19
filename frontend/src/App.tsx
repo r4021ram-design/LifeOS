@@ -4,7 +4,7 @@ import {
   Clock, Activity, Check, Plus, Trash, Lock, LogOut, Loader, Sparkles, AlertCircle, Search,
   ChevronDown, ChevronUp, Mic, Send, User, Sliders, X
 } from 'lucide-react';
-import { useLifeOSStore } from './store/useLifeOSStore';
+import { useLifeOSStore, API_BASE } from './store/useLifeOSStore';
 import type { Note } from './store/useLifeOSStore';
 import './App.css';
 
@@ -116,7 +116,7 @@ export default function App() {
       : { email: authEmail, password: authPassword };
 
     try {
-      const res = await fetch(`http://localhost:8000/api/v1${url}`, {
+      const res = await fetch(`${API_BASE}${url}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
