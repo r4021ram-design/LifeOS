@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+  /* Override Tailwind v4 theme colors to Indian Traditional Saffron, Gold & Maroon */
+  --color-purple-50: #fff6f0;
+  --color-purple-100: #ffecd6;
+  --color-purple-200: #ffd4a8;
+  --color-purple-300: #ffb770;
+  --color-purple-400: #ff9133;
+  --color-purple-500: #ff720a;
+  --color-purple-600: #e65100;
+  --color-purple-700: #b33600;
+  --color-purple-800: #802200;
+  --color-purple-900: #4d1000;
+  --color-purple-950: #2b0800;
+
+  --color-blue-900: #4a0e17; /* Deep royal maroon/crimson */
+  --color-blue-800: #6b1d2f;
+  --color-blue-950: #2a050a;
+}
+
 @layer base {
   :root {
     --background: 240 10% 3.9%;
@@ -26,14 +45,44 @@
 }
 
 body {
-  background-color: #030303;
-  color: #f3f4f6;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0d0705; /* Deep clay / dark sandalwood base */
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(230, 81, 0, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(183, 62, 0, 0.03) 0%, transparent 60%),
+    /* Sacred geometry style background grid */
+    radial-gradient(rgba(212, 175, 55, 0.015) 1px, transparent 0),
+    radial-gradient(rgba(230, 81, 0, 0.01) 2px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px, 48px 48px;
+  background-position: 0 0, 0 0, 0 0, 0 0, 24px 24px;
+  color: #f7ebe4; /* Warm ivory/cream instead of cold white */
+  font-family: 'Philosopher', 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
   min-height: 100vh;
   /* Prevent horizontal scroll issues on mobile layout transitions */
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Traditional Typography Assignments */
+h1, .font-traditional-brand, h1 *, .text-3xl.font-extrabold {
+  font-family: 'Yatra One', cursive, serif !important;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #ffeaa8 0%, #ff8d33 50%, #e65100 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(230, 81, 0, 0.15);
+}
+
+h2, h3, h4, .text-lg.font-bold, .text-sm.font-bold, header span.font-bold {
+  font-family: 'Marcellus', serif !important;
+  letter-spacing: 0.03em;
+  color: #ffe8cc !important; /* Soft warm gold tint */
+}
+
+/* Global inputs, button text, select options font */
+input, select, textarea, button, p, span, div, a {
+  font-family: 'Philosopher', 'Inter', system-ui, sans-serif;
 }
 
 /* Touch targets guidelines (WCAG AA compliance) */
@@ -42,57 +91,67 @@ body {
   min-width: 44px;
 }
 
-/* Glassmorphism Classes */
+/* Terracotta & Gold Glassmorphism */
 .glass-panel {
-  background: rgba(18, 18, 24, 0.65);
+  background: rgba(22, 11, 8, 0.78); /* Deep clay terracotta glass */
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.18); /* Elegant gold border */
   border-radius: 12px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.6),
+    0 0 20px 2px rgba(230, 81, 0, 0.06);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(230, 81, 0, 0.04); /* Saffron card hue */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.09); /* Soft gold card border */
   border-radius: 8px;
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(230, 81, 0, 0.02);
+  border: 1px solid rgba(212, 175, 55, 0.12);
   color: #fff;
   border-radius: 8px;
   padding: 8px 12px;
   outline: none;
   transition: all 0.2s ease-in-out;
-  min-height: 44px; /* Touch target compatible input */
+  min-height: 44px;
 }
 
 .glass-input:focus {
-  border-color: #aa3bff;
-  box-shadow: 0 0 0 2px rgba(170, 59, 255, 0.2);
+  border-color: #ff9133; /* Saffron focus */
+  box-shadow: 0 0 0 2px rgba(230, 81, 0, 0.25);
 }
 
-/* Custom Scrollbars */
+/* Border overrides to give a subtle golden-tint grid line */
+.border-white\/5 {
+  border-color: rgba(212, 175, 55, 0.08) !important;
+}
+.border-white\/10 {
+  border-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* Custom Scrollbars in Saffron & Gold */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(26, 12, 8, 0.2);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(212, 175, 55, 0.25); /* Gold scrollbar track */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(230, 81, 0, 0.5); /* Saffron hover */
 }
 
 /* Premium Animations */
