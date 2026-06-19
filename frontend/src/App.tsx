@@ -69,6 +69,55 @@ export default function App() {
     }
   ]);
 
+  // Voice input states
+  const [isListening, setIsListening] = useState(false);
+  const [speechLanguage, setSpeechLanguage] = useState<'hi-IN' | 'gu-IN' | 'en-US'>('hi-IN');
+  const recognitionRef = useRef<any>(null);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      
+      rec.onstart = () => {
+        setIsListening(true);
+      };
+      
+      rec.onend = () => {
+        setIsListening(false);
+      };
+      
+      rec.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setChatInput(prev => prev + (prev ? ' ' : '') + transcript);
+      };
+      
+      rec.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = rec;
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.");
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.lang = speechLanguage;
+      recognitionRef.current.start();
+    }
+  };
+
   // Initial data loading
   useEffect(() => {
     if (store.token) {
@@ -1569,9 +1618,32 @@ export default function App() {
 
               {/* Input field */}
               <div className="flex gap-2 items-center border-t border-white/5 pt-3 shrink-0">
-                <button className="p-2.5 bg-white/2 hover:bg-white/5 border border-white/10 rounded-full text-gray-400 touch-target">
-                  <Mic className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button 
+                    onClick={toggleListening}
+                    className={`p-2.5 border rounded-full touch-target transition-all ${
+                      isListening 
+                        ? 'bg-red-500/20 border-red-500 text-red-500 animate-pulse' 
+                        : 'bg-white/2 hover:bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                    title={isListening ? "Stop listening" : "Start voice input"}
+                  >
+                    <Mic className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSpeechLanguage(prev => {
+                        if (prev === 'hi-IN') return 'gu-IN';
+                        if (prev === 'gu-IN') return 'en-US';
+                        return 'hi-IN';
+                      });
+                    }}
+                    className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-bold rounded text-purple-400 hover:text-purple-300 transition-all font-mono touch-target"
+                    title="Change voice input language"
+                  >
+                    {speechLanguage === 'hi-IN' ? 'HI' : speechLanguage === 'gu-IN' ? 'GU' : 'EN'}
+                  </button>
+                </div>
                 <input
                   type="text"
                   className="flex-1 glass-input py-2 text-base md:text-sm"
