@@ -25,6 +25,7 @@ class User(Base):
     subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
     ai_usage_logs = relationship("AIUsageLog", back_populates="user", cascade="all, delete-orphan")
+    device_tokens = relationship("DeviceToken", back_populates="user", cascade="all, delete-orphan")
 
 class Project(Base):
     __tablename__ = "projects"
@@ -353,3 +354,16 @@ event.listen(
     DDL("CREATE INDEX IF NOT EXISTS idx_trading_search_gin ON trading_journal USING gin(to_tsvector('english', coalesce(ticker, '') || ' ' || coalesce(strategy, '') || ' ' || coalesce(psychology_notes, '')))")
     .execute_if(dialect="postgresql")
 )
+
+class DeviceToken(Base):
+    __tablename__ = "device_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token = Column(String, unique=True, index=True, nullable=False)
+    platform = Column(String, nullable=False)  # android, ios
+    device_name = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), onupdate=lambda: datetime.datetime.now(datetime.UTC))
+
+    user = relationship("User", back_populates="device_tokens")

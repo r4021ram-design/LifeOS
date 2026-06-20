@@ -209,3 +209,20 @@ class SearchResponse(BaseModel):
     habits: List[HabitResponse]
     events: List[EventResponse]
     trading_journal: List[TradingJournalResponse]
+
+# --- Device Tokens ---
+class DeviceTokenCreate(BaseModel):
+    token: str
+    platform: str
+    device_name: Optional[str] = None
+
+class DeviceTokenResponse(BaseModel):
+    id: int
+    user_id: int
+    token: str
+    platform: str
+    device_name: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

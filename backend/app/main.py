@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.db import engine, Base, get_db
 from app.core.config import settings
-from app.api.v1 import auth, tasks, habits, goals, notes, trading, panchang, ai, health, search
+from app.api.v1 import auth, tasks, habits, goals, notes, trading, panchang, ai, health, search, devices
 from app.core.metrics import metrics_router
 
 # Initialize Sentry only in staging and production
@@ -74,6 +74,7 @@ app.include_router(panchang.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
+app.include_router(devices.router, prefix="/api/v1")
 app.include_router(metrics_router)
 
 # Top-level Health check aliases for container orchestrations

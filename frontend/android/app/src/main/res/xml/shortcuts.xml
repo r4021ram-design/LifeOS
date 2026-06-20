@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="quick_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_task"
+        android:shortcutShortLabel="@string/shortcut_task_short"
+        android:shortcutLongLabel="@string/shortcut_task_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.lifeos.app"
+            android:targetClass="com.lifeos.app.MainActivity"
+            android:data="lifeos://app/tasks" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="quick_reminder"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_reminder"
+        android:shortcutShortLabel="@string/shortcut_reminder_short"
+        android:shortcutLongLabel="@string/shortcut_reminder_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.lifeos.app"
+            android:targetClass="com.lifeos.app.MainActivity"
+            android:data="lifeos://app/tasks?action=quick_reminder" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="ai_assistant"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_ai"
+        android:shortcutShortLabel="@string/shortcut_ai_short"
+        android:shortcutLongLabel="@string/shortcut_ai_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.lifeos.app"
+            android:targetClass="com.lifeos.app.MainActivity"
+            android:data="lifeos://app/ai" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="open_panchang"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_panchang"
+        android:shortcutShortLabel="@string/shortcut_panchang_short"
+        android:shortcutLongLabel="@string/shortcut_panchang_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.lifeos.app"
+            android:targetClass="com.lifeos.app.MainActivity"
+            android:data="lifeos://app/panchang" />
+    </shortcut>
+</shortcuts>

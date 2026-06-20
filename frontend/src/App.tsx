@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useLifeOSStore, API_BASE } from './store/useLifeOSStore';
 import type { Note } from './store/useLifeOSStore';
+import { NativeService, BiometricService, OfflineSyncService } from './services/nativeService';
 import './App.css';
 
 export default function App() {
@@ -118,6 +119,156 @@ export default function App() {
     }
   };
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) {
+      setTouchStart(e.targetTouches[0].clientY);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientY;
+    const diff = touchEnd - touchStart;
+    
+    if (diff > 140) { // Pull down threshold
+      store.fetchTasks();
+      store.fetchHabits();
+      store.fetchGoals();
+      store.fetchNotes();
+      store.fetchTrades();
+      store.fetchPanchang();
+      console.log("Pull-to-refresh: Syncing all data...");
+    }
+    setTouchStart(null);
+  };
+
+  const [isPushAvailable, setIsPushAvailable] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'Connected' | 'Offline' | 'Syncing...' | 'Synced'>('Connected');
+
+  // Native initializations (FCM, SQLite, Keyboard)
+  useEffect(() => {
+    const initNative = async () => {
+      const res = await NativeService.initialize(store.token);
+      setIsPushAvailable(res.pushAvailable);
+    };
+    initNative();
+  }, [store.token]);
+
+  // Restore JWT session on startup
+  useEffect(() => {
+    const restoreSession = async () => {
+      const savedToken = await NativeService.getSecureItem("lifeos_token");
+      const savedUserStr = await NativeService.getSecureItem("lifeos_user");
+      if (savedToken) {
+        store.setToken(savedToken);
+        if (savedUserStr) {
+          store.setUser(JSON.parse(savedUserStr));
+        }
+      }
+    };
+    restoreSession();
+  }, []);
+
+  // Biometric auto-login on startup
+  useEffect(() => {
+    const checkBiometricLogin = async () => {
+      const isBiometricsEnabled = localStorage.getItem('biometrics_enabled') === 'true';
+      const storedEmail = localStorage.getItem('auth_email');
+      
+      if (isBiometricsEnabled && storedEmail) {
+        const token = await BiometricService.getStoredToken(storedEmail);
+        if (token) {
+          store.setToken(token);
+          store.setUser({ email: storedEmail });
+          store.setOfflineMode(false);
+        }
+      }
+    };
+    checkBiometricLogin();
+  }, []);
+
+  // Network status listeners
+  useEffect(() => {
+    const handleOnline = async () => {
+      store.setOfflineMode(false);
+      setSyncStatus('Syncing...');
+      if (store.token) {
+        await OfflineSyncService.syncWithBackend(store.token);
+      }
+      setSyncStatus('Synced');
+      setTimeout(() => setSyncStatus('Connected'), 3000);
+    };
+
+    const handleOffline = () => {
+      store.setOfflineMode(true);
+      setSyncStatus('Offline');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if (!navigator.onLine) {
+      handleOffline();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [store.token]);
+
+  // Hardware back button registration
+  useEffect(() => {
+    NativeService.registerBackButtonHandler(() => {
+      let closedAny = false;
+      if (isMoreDrawerOpen) {
+        setIsMoreDrawerOpen(false);
+        closedAny = true;
+      }
+      if (isQuickCaptureOpen) {
+        setIsQuickCaptureOpen(false);
+        closedAny = true;
+      }
+      if (isCommandPaletteOpen) {
+        setIsCommandPaletteOpen(false);
+        closedAny = true;
+      }
+      return closedAny;
+    });
+  }, [isMoreDrawerOpen, isQuickCaptureOpen, isCommandPaletteOpen]);
+
+  // Deep link listener registration
+  useEffect(() => {
+    NativeService.registerDeepLinkHandler();
+  }, []);
+
+  // Share intent custom event listener
+  useEffect(() => {
+    const handleShareEvent = (event: any) => {
+      console.log('Received share event:', event);
+      const data = event.detail || event || {};
+      const text = data.text;
+      const image = data.image;
+      if (text) {
+        store.createNote({
+          title: 'Quick Share Note',
+          content: text
+        });
+        store.setActiveTab('notes');
+      } else if (image) {
+        store.createNote({
+          title: 'Quick Share Image',
+          content: `Shared image location: ${image}`
+        });
+        store.setActiveTab('notes');
+      }
+    };
+    window.addEventListener('shareIntoApp', handleShareEvent as any);
+    return () => window.removeEventListener('shareIntoApp', handleShareEvent as any);
+  }, []);
+
   // Initial data loading
   useEffect(() => {
     if (store.token) {
@@ -127,6 +278,8 @@ export default function App() {
       store.fetchNotes();
       store.fetchTrades();
       store.fetchPanchang();
+      // Auto-trigger sync queue on startup if online
+      OfflineSyncService.syncWithBackend(store.token);
     } else {
       store.fetchPanchang();
     }
@@ -482,7 +635,7 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#030303] text-gray-200">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#030303] text-gray-200" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       
       {/* Raycast-style Command Palette Dialog Modal */}
       {isCommandPaletteOpen && (
@@ -598,7 +751,7 @@ export default function App() {
       )}
 
       {/* Mobile Header */}
-      <header className="flex md:hidden h-14 items-center justify-between px-4 border-b border-white/5 bg-[#09090d]/65 backdrop-blur-md sticky top-0 z-30 shrink-0">
+      <header className="flex md:hidden min-h-[3.5rem] pt-[env(safe-area-inset-top)] items-center justify-between px-4 border-b border-white/5 bg-[#09090d]/65 backdrop-blur-md sticky top-0 z-30 shrink-0">
         <div className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-purple-500 fill-purple-500/20" />
           <span className="font-bold text-white tracking-wide text-base">LifeOS AI</span>
@@ -665,9 +818,15 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-2 mt-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${store.isOffline ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
+            <div className={`w-2.5 h-2.5 rounded-full ${
+              syncStatus === 'Offline' ? 'bg-amber-500 animate-pulse' :
+              syncStatus === 'Syncing...' ? 'bg-blue-400 animate-spin' :
+              syncStatus === 'Synced' ? 'bg-purple-400' : 'bg-emerald-500'
+            }`}></div>
             <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">
-              {store.isOffline ? 'Offline Local Sync' : 'Cloud Connected'}
+              {syncStatus === 'Offline' ? 'Offline Mode' :
+               syncStatus === 'Syncing...' ? 'Syncing...' :
+               syncStatus === 'Synced' ? 'Synced' : 'Cloud Connected'}
             </span>
           </div>
         </div>
@@ -1839,11 +1998,68 @@ export default function App() {
               </button>
             </div>
 
+            {/* Biometric Enable toggle option */}
+            <div className="flex items-center justify-between text-sm border-t border-white/5 pt-4">
+              <span className="text-gray-400">Enable Biometric Login</span>
+              <button
+                onClick={async () => {
+                  const isAvail = await BiometricService.isAvailable();
+                  if (!isAvail) {
+                    alert("Biometric hardware (Fingerprint/FaceID) is not available or enrolled on this device.");
+                    return;
+                  }
+                  const enabled = localStorage.getItem('biometrics_enabled') === 'true';
+                  if (enabled) {
+                    localStorage.removeItem('biometrics_enabled');
+                    await BiometricService.clearCredentials();
+                    alert("Biometric authentication disabled.");
+                  } else {
+                    const secureToken = store.token;
+                    const userEmail = store.user?.email;
+                    if (secureToken && userEmail) {
+                      const saved = await BiometricService.saveCredentials(userEmail, secureToken);
+                      if (saved) {
+                        localStorage.setItem('biometrics_enabled', 'true');
+                        localStorage.setItem('auth_email', userEmail);
+                        alert("Biometric authentication enabled successfully!");
+                      } else {
+                        alert("Failed to securely store biometric login credentials.");
+                      }
+                    } else {
+                      alert("Please log in to enable biometric authentication.");
+                    }
+                  }
+                  // Close drawer to refresh view
+                  setIsMoreDrawerOpen(false);
+                }}
+                className={`py-1.5 px-3 border rounded-lg text-xs font-bold transition-all touch-target ${
+                  localStorage.getItem('biometrics_enabled') === 'true'
+                    ? 'bg-purple-600 border-purple-500 text-white'
+                    : 'bg-white/2 border-white/5 text-gray-400 hover:text-white'
+                }`}
+              >
+                {localStorage.getItem('biometrics_enabled') === 'true' ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+            {/* Push Notifications Configuration Status */}
+            <div className="flex items-center justify-between text-sm border-t border-white/5 pt-4">
+              <span className="text-gray-400">Push Notifications</span>
+              <span className={`text-xs font-bold ${isPushAvailable ? 'text-emerald-400' : 'text-amber-500'}`}>
+                {isPushAvailable ? 'Enabled' : 'Firebase Not Configured'}
+              </span>
+            </div>
+
             <div className="flex items-center justify-between border-t border-white/5 pt-4">
               <div className="flex items-center gap-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${store.isOffline ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
+                <div className={`w-2.5 h-2.5 rounded-full ${
+                  syncStatus === 'Offline' ? 'bg-amber-500 animate-pulse' :
+                  syncStatus === 'Syncing...' ? 'bg-blue-400 animate-spin' :
+                  syncStatus === 'Synced' ? 'bg-purple-400' : 'bg-emerald-500'
+                }`}></div>
                 <span className="text-xs uppercase font-bold tracking-wider text-gray-400">
-                  {store.isOffline ? 'Offline Local Mode' : 'Cloud Sync Connected'}
+                  {syncStatus === 'Offline' ? 'Offline Local Mode' :
+                   syncStatus === 'Syncing...' ? 'Syncing...' :
+                   syncStatus === 'Synced' ? 'Synced' : 'Cloud Sync Connected'}
                 </span>
               </div>
 
@@ -1859,7 +2075,7 @@ export default function App() {
       )}
 
       {/* Mobile Bottom Tab Navigation */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#09090d]/95 backdrop-blur-md border-t border-white/10 z-40 justify-around items-center px-2 safe-bottom">
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 min-h-[4rem] pb-[env(safe-area-inset-bottom)] bg-[#09090d]/95 backdrop-blur-md border-t border-white/10 z-40 justify-around items-center px-2">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = store.activeTab === item.id || 

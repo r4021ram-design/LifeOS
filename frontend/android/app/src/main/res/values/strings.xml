@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LifeOS AI</string>
+    <string name="title_activity_main">LifeOS AI</string>
+    <string name="package_name">com.lifeos.app</string>
+    <string name="custom_url_scheme">com.lifeos.app</string>
+    <string name="shortcut_task_short">Add Task</string>
+    <string name="shortcut_task_long">Create a new task quickly</string>
+    <string name="shortcut_reminder_short">Quick Reminder</string>
+    <string name="shortcut_reminder_long">Add a quick task reminder</string>
+    <string name="shortcut_ai_short">AI Assistant</string>
+    <string name="shortcut_ai_long">Open AI planning assistant</string>
+    <string name="shortcut_panchang_short">Panchang</string>
+    <string name="shortcut_panchang_long">View daily Panchang details</string>
+</resources>

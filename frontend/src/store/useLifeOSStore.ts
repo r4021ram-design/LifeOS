@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { NativeService, OfflineSyncService } from '../services/nativeService';
 
 export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
@@ -167,14 +168,24 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
   loadingAI: false,
 
   setToken: (token) => {
-    if (token) localStorage.setItem("lifeos_token", token);
-    else localStorage.removeItem("lifeos_token");
+    if (token) {
+      localStorage.setItem("lifeos_token", token);
+      NativeService.setSecureItem("lifeos_token", token);
+    } else {
+      localStorage.removeItem("lifeos_token");
+      NativeService.removeSecureItem("lifeos_token");
+    }
     set({ token });
   },
   
   setUser: (user) => {
-    if (user) localStorage.setItem("lifeos_user", JSON.stringify(user));
-    else localStorage.removeItem("lifeos_user");
+    if (user) {
+      localStorage.setItem("lifeos_user", JSON.stringify(user));
+      NativeService.setSecureItem("lifeos_user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("lifeos_user");
+      NativeService.removeSecureItem("lifeos_user");
+    }
     set({ user });
   },
 
@@ -246,6 +257,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      OfflineSyncService.enqueueAction('CREATE', 'task', newTask.id, newTask);
       set((state) => {
         const updated = [...state.tasks, newTask];
         localStorage.setItem("lifeos_tasks", JSON.stringify(updated));
@@ -266,6 +278,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         return { tasks: updated, isOffline: false };
       });
     } catch (err) {
+      OfflineSyncService.enqueueAction('UPDATE', 'task', id, taskUpdate);
       set((state) => {
         const updated = state.tasks.map((t) => {
           if (t.id === id) {
@@ -294,6 +307,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         return { tasks: updated, isOffline: false };
       });
     } catch (err) {
+      OfflineSyncService.enqueueAction('DELETE', 'task', id, null);
       set((state) => {
         const updated = state.tasks.filter((t) => t.id !== id);
         localStorage.setItem("lifeos_tasks", JSON.stringify(updated));
@@ -330,6 +344,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         created_at: new Date().toISOString(),
         logs: []
       };
+      OfflineSyncService.enqueueAction('CREATE', 'habit', newHabit.id, newHabit);
       set((state) => {
         const updated = [...state.habits, newHabit];
         localStorage.setItem("lifeos_habits", JSON.stringify(updated));
@@ -359,6 +374,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         return { habits: updated, isOffline: false };
       });
     } catch (err) {
+      OfflineSyncService.enqueueAction('UPDATE', 'habit', id, { date: dateStr, status });
       set((state) => {
         const updated = state.habits.map((h) => {
           if (h.id === id) {
@@ -513,6 +529,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         ...note,
         created_at: new Date().toISOString()
       };
+      OfflineSyncService.enqueueAction('CREATE', 'note', newNote.id, newNote);
       set((state) => {
         const updated = [...state.notes, newNote];
         localStorage.setItem("lifeos_notes", JSON.stringify(updated));
@@ -530,6 +547,7 @@ export const useLifeOSStore = create<LifeOSState>((set, get) => ({
         return { notes: updated, isOffline: false };
       });
     } catch (err) {
+      OfflineSyncService.enqueueAction('DELETE', 'note', id, null);
       set((state) => {
         const updated = state.notes.filter((n) => n.id !== id);
         localStorage.setItem("lifeos_notes", JSON.stringify(updated));

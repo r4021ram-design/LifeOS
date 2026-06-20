@@ -1,0 +1,16 @@
+{
+  "short_name": "LifeOS AI",
+  "name": "LifeOS AI Assistant",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#0d1117",
+  "theme_color": "#21262d",
+  "display": "standalone",
+  "orientation": "portrait"
+}
